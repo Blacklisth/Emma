@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Surprise pour Emmanuella ! 🎁</title>
+    
+    <link rel="icon" type="image/png" sizes="32x32" href="guitare.png">
+    <link rel="shortcut icon" href="guitare.ico" type="image/x-icon">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --blue-light: #AED6F0;
+            --mint: #B5EAD7;
+            --yellow-soft: #FFF9C4;
+            --white: #FFFFFF;
+            --text-dark: #2C3E50;
+            --accent: #5DADE2;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; background-color: var(--blue-light); color: var(--text-dark); overflow-x: hidden; }
+
+        /* --- ÉCRAN DE VERROUILLAGE --- */
+        #login-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, var(--blue-light), var(--mint));
+            display: flex; justify-content: center; align-items: center; z-index: 1000;
+            transition: transform 0.8s cubic-bezier(0.77, 0, 0.175, 1);
+        }
+        .login-card {
+            background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px);
+            padding: 2rem; border-radius: 20px; border: 1px solid rgba(255,255,255,0.3);
+            text-align: center; box-shadow: 0 8px 32px rgba(0,0,0,0.1); width: 90%; max-width: 400px;
+        }
+        input {
+            width: 100%; padding: 12px; margin: 15px 0; border: none; border-radius: 10px;
+            outline: none; font-size: 1rem; text-align: center;
+        }
+        button {
+            background: var(--accent); color: white; border: none; padding: 12px 25px;
+            border-radius: 10px; cursor: pointer; font-weight: bold; transition: 0.3s;
+        }
+        button:hover { transform: scale(1.05); background: #3498DB; }
+
+        /* --- MISE EN PAGE GLOBALE --- */
+        #main-content { display: none; }
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        section { margin-bottom: 50px; padding-top: 40px; opacity: 0; transform: translateY(30px); transition: 0.8s; }
+        section.visible { opacity: 1; transform: translateY(0); }
+
+        /* --- HEADER --- */
+        header { text-align: center; padding: 60px 20px; background: white; border-radius: 0 0 50px 50px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .profile-img { width: 120px; height: 120px; border-radius: 50%; border: 5px solid var(--mint); object-fit: cover; margin-bottom: 15px; }
+        h1 { font-size: 1.8rem; color: #2E86C1; margin-bottom: 10px; }
+
+        /* --- GALERIE --- */
+        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; }
+        .photo-card { background: white; padding: 8px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transform: rotate(calc(var(--r, 0) * 1deg)); }
+        .photo-card img { width: 100%; border-radius: 5px; filter: grayscale(20%); transition: 0.3s; }
+        .photo-card img:hover { filter: grayscale(0%); transform: scale(1.05); }
+
+        /* --- TIMELINE --- */
+        .timeline { position: relative; padding-left: 30px; border-left: 3px dashed var(--accent); }
+        .timeline-item { margin-bottom: 30px; position: relative; }
+        .timeline-item::before { content: '🎓'; position: absolute; left: -42px; background: white; border-radius: 50%; padding: 5px; }
+        .timeline-content { background: white; padding: 15px; border-radius: 15px; box-shadow: 3px 3px 0px var(--mint); }
+
+        /* --- GUESTBOOK --- */
+        .guestbook { background: var(--yellow-soft); padding: 20px; border-radius: 20px; }
+        #messages-list { margin-top: 20px; max-height: 300px; overflow-y: auto; }
+        .msg-bubble { background: white; padding: 10px 15px; border-radius: 15px; margin-bottom: 10px; font-size: 0.9rem; border-left: 4px solid var(--accent); }
+
+        /* --- SURPRISE --- */
+        .surprise-box { text-align: center; background: linear-gradient(white, var(--mint)); padding: 30px; border-radius: 20px; border: 2px solid white; }
+        .video-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 15px; margin-top: 20px; }
+        .video-container iframe { position: absolute; top:0; left: 0; width: 100%; height: 100%; border: 0; }
+
+        footer { text-align: center; padding: 40px; font-size: 0.8rem; color: #7F8C8D; }
+
+        /* --- ANIMATIONS --- */
+        canvas#confetti { position: fixed; top: 0; left: 0; pointer-events: none; z-index: 999; }
+    </style>
+</head>
+<body>
+
+    <canvas id="confetti"></canvas>
+
+    <div id="login-screen">
+        <div class="login-card">
+            <h2>🔑 Code Secret</h2>
+            <p>Indice : emma + année actuelle</p>
+            <input type="password" id="password-input" placeholder="Entrez le mot de passe...">
+            <button onclick="checkPassword()">Ouvrir le cadeau</button>
+            <p id="error-msg" style="color: #E74C3C; margin-top: 10px; display: none;">Oups ! Réessaie encore 😉</p>
+        </div>
+    </div>
+
+    <div id="main-content">
+        <header>
+            <img src="https://ui-avatars.com/api/?name=Emmanuella&background=B5EAD7&color=fff&size=128" alt="Emmanuella" class="profile-img">
+            <h1>Emmanuella, une bonne année 2026 à toi ! ✨</h1>
+            <p>De la part de ton camarade préféré, <strong>Serge</strong> !</p>
+        </header>
+
+        <div class="container">
+            <section id="accueil" class="visible">
+                <div style="background: white; padding: 25px; border-radius: 20px; text-align: center;">
+                    <h3>Coucou Emma ! 👋</h3>
+                    <p style="margin-top: 10px; line-height: 1.6;">
+                        Je voulais marquer le coup pour cette nouvelle année. Tu es plus qu'une simple voisine de table en cours, tu es une amie géniale sur qui on peut compter (même quand les TD sont incompréhensibles !). <br><br>
+                        Que 2026 soit l'année de ta réussite, de ton bonheur et de nos futurs fous rires en amphi !
+                    </p>
+                </div>
+            </section>
+
+            <section id="galerie">
+                <h2 style="margin-bottom: 20px;">📸 Souvenirs de classe</h2>
+                <div class="gallery-grid">
+                    <div class="photo-card" style="--r: -2"><img src="https://images.unsplash.com/photo-1523240715632-d984bb4b9156?w=400" alt="Cours"></div>
+                    <div class="photo-card" style="--r: 3"><img src="https://images.unsplash.com/photo-1543269865-cbf427effbad?w=400" alt="Rires"></div>
+                    <div class="photo-card" style="--r: -1"><img src="https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?w=400" alt="Études"></div>
+                    <div class="photo-card" style="--r: 2"><img src="https://images.unsplash.com/photo-1491438590914-bc09fcaaf77a?w=400" alt="Amis"></div>
+                    <div class="photo-card" style="--r: -3"><img src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400" alt="Groupe"></div>
+                    <div class="photo-card" style="--r: 1"><img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400" alt="Projet"></div>
+                </div>
+            </section>
+
+            <section id="timeline">
+                <h2 style="margin-bottom: 20px;">📅 Notre Chronologie Fun</h2>
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-content">
+                            <strong>Le Premier Jour :</strong> "Qui aurait cru qu'on deviendrait aussi complices ?"
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-content">
+                            <strong>Le Codage d'Enfer :</strong> Ce jour où on a passé la nuit à décoder un programme de C.
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-content">
+                            <strong>Objectif Examens :</strong> Tes fiches de révisions sont littéralement légendaires !
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="guestbook">
+                <div class="guestbook">
+                    <h3>✍️ Laisse un petit mot (ou tes amis !)</h3>
+                    <div style="display: flex; gap: 10px; margin-top: 15px;">
+                        <input type="text" id="guest-name" placeholder="Nom" style="flex: 1; margin: 0;">
+                        <input type="text" id="guest-msg" placeholder="Message..." style="flex: 2; margin: 0;">
+                        <button onclick="addMessage()">Enregistrer</button>
+                    </div>
+                    <div id="messages-list">
+                        </div>
+                </div>
+            </section>
+
+            <section id="surprise">
+                <div class="surprise-box">
+                    <h3>🎬 Un petit boost pour 2026</h3>
+                    <p>"L'amitié double les joies et réduit de moitié les peines."</p>
+                    <div class="video-container">
+                        <iframe src="https://youtu.be/FOiJKl6EHBk?list=PLddqH8JHkvSLd2zYpw8vN_DSlV2c_MeB2" allowfullscreen></iframe>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <footer>
+            Créé avec ❤️ amical par <strong>Black_lisht error</strong><br>
+            Partage ce lien secret à tes vrais amis !
+        </footer>
+    </div>
+
+    <script>
+        // --- LOGIQUE DE SECURITE ---
+        const SECRET_PASS = "emma2026"; // MODIFIE TON MOT DE PASSE ICI
+
+        function checkPassword() {
+            const input = document.getElementById('password-input').value;
+            if (input.toLowerCase() === SECRET_PASS.toLowerCase()) {
+                document.getElementById('login-screen').style.transform = 'translateY(-100%)';
+                document.getElementById('main-content').style.display = 'block';
+                localStorage.setItem('auth_emma', 'true');
+                startConfetti();
+            } else {
+                document.getElementById('error-msg').style.display = 'block';
+            }
+        }
+
+        // Persistance de la session
+        window.onload = () => {
+            if(localStorage.getItem('auth_emma') === 'true') {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('main-content').style.display = 'block';
+                startConfetti();
+            }
+            loadMessages();
+        };
+
+        // --- ANIMATION AU SCROLL ---
+        window.addEventListener('scroll', () => {
+            document.querySelectorAll('section').forEach(sec => {
+                const top = window.scrollY;
+                const offset = sec.offsetTop - 500;
+                if (top >= offset) sec.classList.add('visible');
+            });
+        });
+
+        // --- GESTION GUESTBOOK (LOCAL STORAGE) ---
+        function addMessage() {
+            const name = document.getElementById('guest-name').value;
+            const msg = document.getElementById('guest-msg').value;
+            if(!name || !msg) return;
+
+            const messages = JSON.parse(localStorage.getItem('emma_msgs') || '[]');
+            messages.unshift({name, msg, date: new Date().toLocaleDateString()});
+            localStorage.setItem('emma_msgs', JSON.stringify(messages));
+            
+            document.getElementById('guest-name').value = '';
+            document.getElementById('guest-msg').value = '';
+            loadMessages();
+        }
+
+        function loadMessages() {
+            const list = document.getElementById('messages-list');
+            const messages = JSON.parse(localStorage.getItem('emma_msgs') || '[]');
+            list.innerHTML = messages.map(m => `
+                <div class="msg-bubble">
+                    <strong>${m.name}</strong>: ${m.msg} <br>
+                    <small style="color: #999; font-size: 0.7rem;">${m.date}</small>
+                </div>
+            `).join('');
+        }
+
+        // --- SYSTEME DE CONFETTI (LIGHT) ---
+        function startConfetti() {
+            const canvas = document.getElementById('confetti');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            let particles = [];
+            const colors = ['#AED6F0', '#B5EAD7', '#FFF9C4', '#5DADE2'];
+
+            for (let i = 0; i < 100; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height - canvas.height,
+                    r: Math.random() * 6 + 2,
+                    d: Math.random() * 10,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    tilt: Math.random() * 10 - 10
+                });
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach((p, i) => {
+                    ctx.beginPath();
+                    ctx.lineWidth = p.r;
+                    ctx.strokeStyle = p.color;
+                    ctx.moveTo(p.x + p.tilt + p.r / 2, p.y);
+                    ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r / 2);
+                    ctx.stroke();
+                    
+                    p.y += Math.cos(p.d) + 1 + p.r / 2;
+                    p.x += Math.sin(p.d);
+                    
+                    if (p.y > canvas.height) {
+                        particles[i].y = -20;
+                        particles[i].x = Math.random() * canvas.width;
+                    }
+                });
+                requestAnimationFrame(draw);
+            }
+            draw();
+        }
+    </script>
+</body>
+</html>
